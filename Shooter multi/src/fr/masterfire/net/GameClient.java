@@ -14,10 +14,12 @@ import fr.masterfire.net.packets.Packet.PacketTypes;
 import fr.masterfire.net.packets.PlayerPackets.Packet02Move;
 import fr.masterfire.net.packets.PlayerPackets.Packet03Shoot;
 import fr.masterfire.net.packets.PlayerPackets.Packet04Health;
+import fr.masterfire.net.packets.PlayerPackets.Packet06Respawn;
 import fr.masterfire.net.packets.ServerPackets.Packet00Login;
 import fr.masterfire.net.packets.ServerPackets.Packet01Disconnect;
 import fr.masterfire.player.Bullet;
 import fr.masterfire.player.Player;
+
 public class GameClient extends Thread {
 
 	private InetAddress ipAddress;
@@ -38,7 +40,6 @@ public class GameClient extends Thread {
 		while (true) {
 			byte[] data = new byte[1024];
 			DatagramPacket packet = new DatagramPacket(data, data.length);
-
 			try {
 				socket.receive(packet);
 			} catch (IOException e) {
@@ -54,7 +55,7 @@ public class GameClient extends Thread {
 		Packet packet;
 		switch (packetTypes) {
 		case INVALID:
-			System.out.println("GameServer.parsePacket() invalid");
+			System.out.println("GameServer.parsePacket() invalid CLIENT " + message);
 			break;
 		case LOGIN:
 			packet = new Packet00Login(data);
@@ -63,22 +64,23 @@ public class GameClient extends Thread {
 		case DISCONNECT:
 			packet = new Packet01Disconnect(data);
 			System.out.println("[" + address.getHostAddress() + ":" + port + "] " + ((Packet01Disconnect) packet).getUsername() + " a quitté la partie...");
-			game.removePlayer(((Packet01Disconnect) packet).getUsername());
 			break;
 		case MOVE:
 			packet = new Packet02Move(data);
-			handleMove((Packet02Move) packet);
 			break;
 		case SHOOT:
 			packet = new Packet03Shoot(data);
-			handleShoot((Packet03Shoot)packet);
+			handleShoot((Packet03Shoot) packet);
 			break;
 		case HEALTH:
 			packet = new Packet04Health(data);
-			handleHealth((Packet04Health)packet);
+			handleHealth((Packet04Health) packet);
 			break;
 		case ASK:
 			game.playerID = Integer.parseInt(message.substring(2));
+			break;
+		case RESPAWN:
+			packet = new Packet06Respawn(data);
 			break;
 		default:
 			System.out.println("DEFAULT CLIENT");
@@ -96,7 +98,7 @@ public class GameClient extends Thread {
 	}
 
 	private void handleShoot(Packet03Shoot packet) {
-		game.player.bullets.add(new Bullet("other", packet.getmX(), packet.getmY(), packet.getPlayerX(), packet.getPlayerY()));
+		game.player.bullets.add(new Bullet(packet.getSender(), packet.getmX(), packet.getmY(), packet.getPlayerX(), packet.getPlayerY()));
 	}
 
 	private void handleLogin(Packet00Login packet, InetAddress address, int port) {
@@ -104,11 +106,7 @@ public class GameClient extends Thread {
 		Player player = new Player(packet.getX(), packet.getY(), 50, Color.BLUE, packet.getUsername(), packet.getPlayerID(), address, port, false);
 		game.players.add(player);
 	}
-
-	private void handleMove(Packet02Move packet) {
-		this.game.movePlayer(packet.getUsername(), packet.getX(), packet.getY());
-	}
-
+	
 	public void sendData(byte[] data) {
 		DatagramPacket packet = new DatagramPacket(data, data.length, ipAddress, 1545);
 		try {

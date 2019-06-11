@@ -11,18 +11,18 @@ public class Packet03Shoot extends Packet{
 	//private float bulletVectorX, bulletVectorY;
 	private int mX, mY;
 	private float playerX, playerY;
-	private String sender;
+	private int sender;
 	
 	public Packet03Shoot(byte[] data) {
 		super(03);
 		String[] dataArray = readData(data).split(",");
-		this.sender = dataArray[0];
+		this.sender = Integer.parseInt(dataArray[0]);
 		this.mX = Integer.parseInt(dataArray[1]);
 		this.mY = Integer.parseInt(dataArray[2]);
 		this.playerX = Float.parseFloat(dataArray[3]);
 		this.playerY = Float.parseFloat(dataArray[4]);
 	}
-	public Packet03Shoot(String sender, int mX, int mY, float playerX, float playerY) {
+	public Packet03Shoot(int sender, int mX, int mY, float playerX, float playerY) {
 		super(03);
 		this.sender = sender;
 		this.mX = mX;
@@ -47,7 +47,7 @@ public class Packet03Shoot extends Packet{
 		return ("03" + this.sender + "," + this.mX + "," + this.mY + "," + this.playerX + "," + this.playerY).getBytes();
 	}
 	
-	public String getSender() {
+	public int getSender() {
 		return this.sender;
 	}
 	public int getmX() {

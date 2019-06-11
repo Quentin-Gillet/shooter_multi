@@ -3,7 +3,6 @@ package fr.masterfire.player;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Rectangle;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
@@ -27,6 +26,8 @@ public class Player {
 	public Mouse mouse;
 	private Game game;
 
+	private int lastPlayerIDTouch;
+	
 	private String username;
 	public int playerID;
 	
@@ -59,14 +60,9 @@ public class Player {
 		}
 	}
 
-	public Rectangle getBounds() {
-		return new Rectangle(x, y, size, size);
-	}
-
 	public void shoot() {
 		if (cooldown >= 20) {
-			bullets.add(new Bullet("me", mouse.getMouseX(), mouse.getMouseY(), this.x, this.y));
-			Packet03Shoot packet = new Packet03Shoot("me", mouse.getMouseX(), mouse.getMouseY(), this.x, this.y);
+			Packet03Shoot packet = new Packet03Shoot(playerID, mouse.getMouseX(), mouse.getMouseY(), this.x, this.y);
 			packet.writeData(game.socketClient);
 			cooldown = 0;
 		}
@@ -78,13 +74,13 @@ public class Player {
 		x += velX;
 		y += velY;
 
+		x = Game.clamp((int) x, 0, Game.WIDTH - 66);
+		y = Game.clamp((int) y, 25, Game.HEIGHT - 89);
+		
 		if (velX != 0 || velY != 0) {
 			Packet02Move packet = new Packet02Move(this.getUsername(), this.x, this.y);
 			packet.writeData(game.socketClient);
 		}
-
-		x = Game.clamp((int) x, 0, Game.WIDTH - 66);
-		y = Game.clamp((int) y, 0, Game.HEIGHT - 89);
 
 		for (int i = 0; i < bullets.size(); i++) {
 			if (bullets.get(i).bulletVector.x <= 0 || bullets.get(i).bulletVector.x >= Game.WIDTH || bullets.get(i).bulletVector.y <= 0 || bullets.get(i).bulletVector.y >= Game.HEIGHT) {
@@ -96,7 +92,7 @@ public class Player {
 		}
 		cooldown++;
 
-		if (healt != oldHealt) {
+		if (healt != oldHealt && healt != 100) {
 			Packet04Health packet = new Packet04Health(this.playerID, this.healt);
 			packet.writeData(game.socketClient);
 		}
@@ -107,8 +103,9 @@ public class Player {
 	private void collision() {
 		for (int i = 0; i < bullets.size(); i++) {
 			Bullet b = bullets.get(i);
-			if (intersects(this, b) && b.getSender().equals("other")) {
+			if (intersects(this, b) && b.getSender() != playerID) {
 				bullets.remove(i);
+				this.lastPlayerIDTouch = b.getSender();
 				this.healt -= 10;
 			}
 		}
@@ -139,7 +136,7 @@ public class Player {
 		for (int i = 0; i < bullets.size(); i++) {
 			bullets.get(i).render(g);
 		}
-
+		
 	}
 
 	public int getX() {
@@ -188,6 +185,22 @@ public class Player {
 
 	public void setHealth(int health) {
 		this.healt = health;
+	}
+
+	public int getHealth() {
+		return this.healt;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
+	public InetAddress getIpAddress() {
+		return ipAddress;
+	}
+
+	public int getLastPlayerIDTouch() {
+		return lastPlayerIDTouch;
 	}
 
 

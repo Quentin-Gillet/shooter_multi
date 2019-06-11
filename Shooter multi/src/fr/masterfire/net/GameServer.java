@@ -14,6 +14,7 @@ import fr.masterfire.net.packets.Packet.PacketTypes;
 import fr.masterfire.net.packets.PlayerPackets.Packet02Move;
 import fr.masterfire.net.packets.PlayerPackets.Packet03Shoot;
 import fr.masterfire.net.packets.PlayerPackets.Packet04Health;
+import fr.masterfire.net.packets.PlayerPackets.Packet06Respawn;
 import fr.masterfire.net.packets.ServerPackets.Packet00Login;
 import fr.masterfire.net.packets.ServerPackets.Packet01Disconnect;
 import fr.masterfire.net.packets.ServerPackets.Packet05Ask;
@@ -24,7 +25,7 @@ public class GameServer extends Thread {
 	private DatagramSocket socket;
 	private List<Player> connectedPlayers = new ArrayList<Player>();
 
-	private int playerID = 1;
+	private int playerID = 0;
 	
 	public GameServer() {
 		try {
@@ -54,7 +55,7 @@ public class GameServer extends Thread {
 		Packet packet;
 		switch (packetTypes) {
 		case INVALID:
-			System.out.println("GameServer.parsePacket() invalid SERVER");
+			System.out.println("GameServer.parsePacket() invalid SERVER " + message);
 			break;
 		case LOGIN:
 			packet = new Packet00Login(data);
@@ -77,7 +78,7 @@ public class GameServer extends Thread {
 			break;
 		case SHOOT:
 			packet = new Packet03Shoot(data);
-			packet.writeDataWithout(this, address, port);
+			packet.writeData(this);
 			break;
 		case HEALTH:
 			packet = new Packet04Health(data);
@@ -87,9 +88,12 @@ public class GameServer extends Thread {
 			packet = new Packet05Ask(data);
 			if (message.substring(2).equals("playerID")) {
 				String dataString = new String("05" + playerID);
-				System.out.println(dataString);
 				sendData(dataString.getBytes(), address, port);
 			}
+			break;
+		case RESPAWN:
+			packet = new Packet06Respawn(data);
+			packet.writeDataWithout(this, address, port);
 			break;
 		default:
 			System.out.println("GameServer.parsePacket() DEFAULT SERVER " + message);
@@ -177,6 +181,12 @@ public class GameServer extends Thread {
 		for (Player p : connectedPlayers) {
 			sendData(data, p.ipAddress, p.port);
 		}
+	}
+	
+	public static void main(String[] args) {
+		GameServer gs = new GameServer();
+		gs.start();
+		System.out.println("SERVER >>> START");
 	}
 
 }

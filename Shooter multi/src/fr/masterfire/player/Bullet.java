@@ -6,7 +6,7 @@ import fr.masterfire.math.Vector;
 
 public class Bullet{
 
-	private String sender;
+	private int sender;
 	
 	private Vector playerVector;
 	public Vector dirVector;
@@ -18,8 +18,8 @@ public class Bullet{
 	private float timeStep = 1f / 60f;
 	private float speed = 800f;
 
-	public Bullet(String sender, int mX, int mY, float playerX, float playerY) {
-		this.sender = sender;
+	public Bullet(int playerID, int mX, int mY, float playerX, float playerY) {
+		this.sender = playerID;
 		this.mX = mX;
 		this.mY = mY;
 		this.playerX = playerX;
@@ -55,7 +55,7 @@ public class Bullet{
 		g.fillOval((int) bulletVector.x, (int) bulletVector.y, 15, 15);
 	}
 
-	public String getSender() {
+	public int getSender() {
 		return this.sender;
 	}
 

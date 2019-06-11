@@ -9,7 +9,7 @@ public abstract class Packet {
 
 	public static enum PacketTypes {
 
-		INVALID(-1), LOGIN(00), DISCONNECT(01), MOVE(02), SHOOT(03), HEALTH(04), ASK(05);
+		INVALID(-1), LOGIN(00), DISCONNECT(01), MOVE(02), SHOOT(03), HEALTH(04), ASK(05), RESPAWN(06);
 
 		private int packetId;
 
@@ -39,7 +39,7 @@ public abstract class Packet {
 		String message = new String(data).trim();
 		return message.substring(2);
 	}
-
+	
 	public static PacketTypes lookuPacket(String id) {
 		try {
 			return lookuPacket(Integer.parseInt(id));
